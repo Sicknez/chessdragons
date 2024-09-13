@@ -186,18 +186,20 @@ def find():
     find_candy(cm,"c")
     find_candy(lich,"l")
 def solveb():
+    find_candy(brood,"b")
     solve(arr,"b")
-    find()
+    find_candy(lina,"L")
     solve(arr,"L")
+    find_candy(wyvern,"w")
     solve(arr,"w")
-    find()
+    find_candy(cm,"c")
     solve(arr,"c")
+    find_candy(lich,"l")
     solve(arr,"l")
-    find()
+    find_candy(venge,"v")
     solve(arr,"v")
 
 while True:  # making a loop
-    find()
     solveb()
     
     try:  # used try so that if user pressed other than the given key error will not be shown
