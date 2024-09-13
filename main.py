@@ -4,7 +4,9 @@ import keyboard
 
 rows, cols = (8, 8)
 arr = [[0]*cols for _ in range(rows)]
-
+default_height = 1080
+screen_width, screen_height = pyautogui.size()
+ratio = screen_height/default_height
 
 brood = 'brood.png'
 lina = 'lina.png'
@@ -13,12 +15,20 @@ venge = 'venge.png'
 cm = 'cm.png'
 lich = 'lich.png'
 
+def_height = 1080;
+screen_width, screen_height = pyautogui.size()
+ratio = screen_height/def_height;
+startY = round(130 * ratio)
+startX = round(230 * ratio)
+candyH = round(90 * ratio)
+candyW = round(90 * ratio)
+startCY = startY + round(candyH/2)
+startCX = startX + round(candyH/2)
 def find_candy(candy,tok):
     #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
-    
     try:
-        for element in pyautogui.locateAllOnScreen(candy,confidence=0.70,grayscale=False):
-            arr[(element[1]-130)//90][(element[0]-230)//90] = tok
+        for element in pyautogui.locateAllOnScreen(candy,confidence=0.85,grayscale=False):
+            arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
             #x = input("Press Enter to continue...")
     except:
         print("No candy found")
@@ -27,11 +37,18 @@ def find_candy(candy,tok):
 
 def swap(i,j,k,l):
     #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
+    pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
+    pyautogui.mouseDown()
+    pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
+    print(startCX+j*candyW,startCY+i*candyH)
+    print(startCX+l*candyW,startCY+k*candyH)
+    pyautogui.mouseUp()
+
+def swap(i,j,k,l):
+    #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
     pyautogui.moveTo(270+j*90,180+i*90)
     pyautogui.mouseDown()
     pyautogui.moveTo(270+l*90,180+k*90,duration=0.2)
-    print(270+j*90,180+i*90)
-    print(270+l*90,180+k*90)
     pyautogui.mouseUp()
 
 def solve(arr,tok):
@@ -99,37 +116,54 @@ def solve(arr,tok):
                 try:
                     if arr[i][j+1] == tok:
                         print("second "+tok+" found at "+str(i)+","+str(j+1))
+                        print("i,j",i,j)
                         if arr[i+1][j+2] == tok:
                             print("third "+tok+" found at "+str(i+1)+","+str(j+2)+" RRD")
+                            arr[i+1][j+2]=arr[i][j+2]
+                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j+2,i,j+2)
                             break
                         if i>0 and arr[i-1][j+2] == tok:
                             print("third "+tok+" found at "+str(i-1)+","+str(j+2)+" RRU")
+                            arr[i-1][j+2]=arr[i][j+2]
+                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j+2,i,j+2) 
                             break
                         if arr[i][j+3] == tok:
                             print("third "+tok+" found at "+str(i)+","+str(j+3)+" RRR")
-                            swap(i,j+3,i+2,j)
+                            arr[i][j+3]=arr[i][j+2]
+                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
+                            swap(i,j+3,i,j+2)
                             break
                         if i>0 and j>1 and arr[i-1][j-1] == tok:
                             print("third "+tok+" found at "+str(i-1)+","+str(j-1)+" LLU")
+                            arr[i-1][j-1]=arr[i][j-1]
+                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j-1,i,j-1)
                             break
                         if j>0 and arr[i+1][j-1] == tok:
                             print("third "+tok+" found at "+str(i+1)+","+str(j-1)+" LLD")
+                            arr[i+1][j-1]=arr[i][j-1]
+                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j-1,i,j-1) 
                             break
-                        if j>1 and arr[i][j-2] == tok:
+                        if  arr[i][j-2] == tok:
                             print("third "+tok+" found at "+str(i)+","+str(j-2)+" LLL")
+                            arr[i][j-2]=arr[i][j-1]
+                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i,j-2,i,j-1)
                             break
                     if arr[i][j+2] == tok:
                         if arr[i+1][j+1] == tok:
                             print(" third "+tok+" found at "+str(i+1)+","+str(j+1)+" DLD")
+                            arr[i+1][j+1]=arr[i+1][j]
+                            arr[i+1][j],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j+1,i,j+1)
                             break
                         if i>0 and arr[i-1][j+1] == tok:
                             print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")
+                            arr[i-1][j+1]=arr[i-1][j]
+                            arr[i-1][j],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j+1,i,j+1)     
                             break 
                 except:
@@ -153,17 +187,14 @@ def find():
     find_candy(lich,"l")
 def solveb():
     solve(arr,"b")
-    grav(arr)
+    find()
     solve(arr,"L")
-    grav(arr)
     solve(arr,"w")
-    grav(arr)
+    find()
     solve(arr,"c")
-    grav(arr)
     solve(arr,"l")
-    grav(arr)
+    find()
     solve(arr,"v")
-    grav(arr)
 
 while True:  # making a loop
     find()
