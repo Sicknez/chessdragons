@@ -54,116 +54,116 @@ def swap(i,j,k,l):
 def solve(arr,tok):
     for i in range(8):
         for j in range(8):
-            if arr[i][j] == tok:
+            if arr[i][j] == tok:                                                                # 1
                 print(tok+" found at "+str(i)+","+str(j))
                 try:
-                    if arr[i+1][j] == tok:
-                        print("second "+tok+" found at "+str(i+1)+","+str(j))
+                    if arr[i+1][j] == tok:                                                      # 1
+                        print("second "+tok+" found at "+str(i+1)+","+str(j))                   # 2
                         
-                        if arr[i+2][j+1] == tok:
-                            print("third "+tok+" found at "+str(i+2)+","+str(j+1)+" DDR")
-                            arr[i+2][j+1]=arr[i+2][j]
-                            arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if arr[i+2][j+1] == tok:                                                # 1
+                            print("third "+tok+" found at "+str(i+2)+","+str(j+1)+" DDR")       # 2
+                            #arr[i+2][j+1]=arr[i+2][j]                                           # x3
+                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
                             swap(i+2,j+1,i+2,j)
                             break
-                        if j>0 and arr[i+2][j-1] == tok:
-                            print(" third "+tok+" found at "+str(i+2)+","+str(j-1)+" DDL")
-                            arr[i+2][j-1]=arr[i+2][j]
-                            arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if j>0 and arr[i+2][j-1] == tok:                                        #  1                          
+                            print(" third "+tok+" found at "+str(i+2)+","+str(j-1)+" DDL")      #  2
+                            #arr[i+2][j-1]=arr[i+2][j]                                           # 3x                   
+                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
                             swap(i+2,j-1,i+2,j)
                             break
-                        if arr[i+3][j] == tok:
-                            print("third "+tok+" found at "+str(i+3)+","+str(j)+" DDD")
-                            arr[i+3][j]=arr[i+2][j]
-                            arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if arr[i+3][j] == tok:                                                  # 1           
+                            print("third "+tok+" found at "+str(i+3)+","+str(j)+" DDD")         # 2
+                            #arr[i+3][j]=arr[i+2][j]                                             # x                 
+                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"                     # 3
                             swap(i+3,j,i+2,j)   
                             break
-                        if i>0 and arr[i-1][j+1] == tok:
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" UUR")
-                            arr[i-1][j+1]=arr[i-1][j]
-                            arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if i>0 and arr[i-1][j+1] == tok:                                        # x3                            
+                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" UUR")       # 1
+                            #arr[i-1][j+1]=arr[i-1][j]                                           # 2                                
+                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
                             swap(i-1,j+1,i-1,j)
                             break
-                        if i>0 and j>0 and arr[i-1][j-1] == tok:
-                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" UUL")
-                            arr[i-1][j-1]=arr[i-1][j]
-                            arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if i>0 and j>0 and arr[i-1][j-1] == tok:                                # 3x
+                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" UUL")      #  1
+                            #arr[i-1][j-1]=arr[i-1][j]                                           #  2                
+                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
                             swap(i-1,j-1,i-1,j)
                             break
-                        if i>1 and arr[i-2][j] == tok:
-                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" UUU")
-                            arr[i-2][j]=arr[i-1][j]
-                            arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                        if i>1 and arr[i-2][j] == tok:                                          # 3
+                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" UUU")         # x
+                            #arr[i-2][j]=arr[i-1][j]                                             # 1                  
+                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"                     # 2
                             swap(i-2,j,i-1,j)      
                             break 
-                    if arr[i+2][j] == tok:
-                        if j>0 and arr[i+1][j-1] == tok:
-                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")
-                            arr[i+1][j-1]=arr[i+1][j]
-                            arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
+                    if arr[i+2][j] == tok:                                                                             
+                        if j>0 and arr[i+1][j-1] == tok:                                        #  1              
+                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")      # 3x
+                            #arr[i+1][j-1]=arr[i+1][j]                                           #  2
+                            #arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
                             swap(i+1,j-1,i+1,j)
                             break
-                        if arr[i+1][j+1] == tok:
-                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" DRD")
-                            arr[i+1][j+1]=arr[i+1][j]
-                            arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
+                        if arr[i+1][j+1] == tok:                                                # 1                    
+                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" DRD")         # x3
+                            #arr[i+1][j+1]=arr[i+1][j]                                           # 2        
+                            #arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
                             swap(i+1,j+1,i+1,j)     
                             break 
                 except:
                     pass
-            if arr[i][j] == tok:   
+            if arr[i][j] == tok:                                         
                 print(tok+" found at "+str(i)+","+str(j))         
                 try:
                     if arr[i][j+1] == tok:
                         print("second "+tok+" found at "+str(i)+","+str(j+1))
                         print("i,j",i,j)
-                        if arr[i+1][j+2] == tok:
-                            print("third "+tok+" found at "+str(i+1)+","+str(j+2)+" RRD")
-                            arr[i+1][j+2]=arr[i][j+2]
-                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if arr[i+1][j+2] == tok:                                                # 1 2 x
+                            print("third "+tok+" found at "+str(i+1)+","+str(j+2)+" RRD")       #     3
+                            #arr[i+1][j+2]=arr[i][j+2]                                           
+                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j+2,i,j+2)
                             break
-                        if i>0 and arr[i-1][j+2] == tok:
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+2)+" RRU")
-                            arr[i-1][j+2]=arr[i][j+2]
-                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if i>0 and arr[i-1][j+2] == tok:                                        #     3
+                            print("third "+tok+" found at "+str(i-1)+","+str(j+2)+" RRU")       # 1 2 x
+                            #arr[i-1][j+2]=arr[i][j+2]
+                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j+2,i,j+2) 
                             break
-                        if arr[i][j+3] == tok:
+                        if arr[i][j+3] == tok:                                                  # 1 2 x 3
                             print("third "+tok+" found at "+str(i)+","+str(j+3)+" RRR")
-                            arr[i][j+3]=arr[i][j+2]
-                            arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
+                            #arr[i][j+3]=arr[i][j+2]
+                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i,j+3,i,j+2)
                             break
-                        if i>0 and j>1 and arr[i-1][j-1] == tok:
-                            print("third "+tok+" found at "+str(i-1)+","+str(j-1)+" LLU")
-                            arr[i-1][j-1]=arr[i][j-1]
-                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if i>0 and j>1 and arr[i-1][j-1] == tok:                                # 3
+                            print("third "+tok+" found at "+str(i-1)+","+str(j-1)+" LLU")       # x 1 2
+                            #arr[i-1][j-1]=arr[i][j-1]
+                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j-1,i,j-1)
                             break
-                        if j>0 and arr[i+1][j-1] == tok:
-                            print("third "+tok+" found at "+str(i+1)+","+str(j-1)+" LLD")
-                            arr[i+1][j-1]=arr[i][j-1]
-                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if j>0 and arr[i+1][j-1] == tok:                                        # x 1 2
+                            print("third "+tok+" found at "+str(i+1)+","+str(j-1)+" LLD")       # 3
+                            #arr[i+1][j-1]=arr[i][j-1]
+                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j-1,i,j-1) 
                             break
-                        if  arr[i][j-2] == tok:
-                            print("third "+tok+" found at "+str(i)+","+str(j-2)+" LLL")
-                            arr[i][j-2]=arr[i][j-1]
-                            arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if  arr[i][j-2] == tok:                                                 # 3 x 1 2                     
+                            print("third "+tok+" found at "+str(i)+","+str(j-2)+" LLL")         
+                            #arr[i][j-2]=arr[i][j-1]
+                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i,j-2,i,j-1)
                             break
-                    if arr[i][j+2] == tok:
-                        if arr[i+1][j+1] == tok:
-                            print(" third "+tok+" found at "+str(i+1)+","+str(j+1)+" DLD")
-                            arr[i+1][j+1]=arr[i+1][j]
-                            arr[i+1][j],arr[i][j+1],arr[i][j] = "a","a","a"
+                    if arr[i][j+2] == tok:                                                      
+                        if arr[i+1][j+1] == tok:                                                # 1 x 2        
+                            print(" third "+tok+" found at "+str(i+1)+","+str(j+1)+" DLD")      #   3
+                            #arr[i+1][j+1]=arr[i+1][j]
+                            #arr[i+1][j],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i+1,j+1,i,j+1)
                             break
-                        if i>0 and arr[i-1][j+1] == tok:
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")
-                            arr[i-1][j+1]=arr[i-1][j]
-                            arr[i-1][j],arr[i][j+1],arr[i][j] = "a","a","a"
+                        if i>0 and arr[i-1][j+1] == tok:                                        #   3                     
+                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")       # 1 x 2
+                            #arr[i-1][j+1]=arr[i-1][j]
+                            #arr[i-1][j],arr[i][j+1],arr[i][j] = "a","a","a"
                             swap(i-1,j+1,i,j+1)     
                             break 
                 except:
