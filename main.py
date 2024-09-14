@@ -7,11 +7,9 @@ from PIL import Image
 import os
 
 debug = True
+
 rows, cols = (8, 8)
 arr = [[0]*cols for _ in range(rows)]
-
-
-#Image paths
 path = os.path.dirname(os.path.abspath(__file__))
 
 brood = path+'/Sprites/Brood/brood.png'
@@ -38,11 +36,10 @@ lich = path+'/Sprites/Lich/lich.png'
 l1= path+'/Sprites/Lich/l_1.png'
 l2 = path+'/Sprites/Lich/l_2.png'
 
-
 images = [brood,b1,b2, lina,L1,L2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2]
 imagesOpened = []
 symbols = ["b","b","b", "L","L","L", "w","w","w", "v","v","v", "c","c","c", "l","l","l"]
-candy_style_count = 18;
+candy_style_count = 18
 for i in range(candy_style_count):
     imagesOpened.append(Image.open(images[i]))
 
@@ -112,7 +109,7 @@ def solve(arr,tok):
     for i in range(8):
         for j in range(8):
             if is_solved:
-                break
+                break;
             itera += 1
             if arr[i][j] == tok:
                 trace_debug(tok+" found at "+str(i)+","+str(j))
@@ -238,7 +235,7 @@ def solveb():
         find_candy(images[i],symbols[i])
         res = solve(arr, symbols[i])
         if res:
-            break
+            break;
 
 while True:  # making a loop
     start = get_ms()
