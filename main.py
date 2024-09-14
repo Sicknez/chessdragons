@@ -1,19 +1,51 @@
 import pyautogui
 import time
 import keyboard
+from datetime import datetime
+from datetime import timedelta
+from PIL import Image
+import os
 
+debug = True
 rows, cols = (8, 8)
 arr = [[0]*cols for _ in range(rows)]
-default_height = 1080
-screen_width, screen_height = pyautogui.size()
-ratio = screen_height/default_height
 
-brood = 'brood.png'
-lina = 'lina.png'
-wyvern = 'wyvern.png'
-venge = 'venge.png'
-cm = 'cm.png'
-lich = 'lich.png'
+
+#Image paths
+path = os.path.dirname(os.path.abspath(__file__))
+
+brood = path+'/Sprites/Brood/brood.png'
+b1 = path+'/Sprites/Brood/b_1.png'
+b2 = path+'/Sprites/Brood/b_2.png'
+
+lina = path+'/Sprites/Lina/lina.png'
+L1 = path+'/Sprites/Lina/L_1.png'
+L2 = path+'/Sprites/Lina/L_2.png'
+
+wyvern = path+'/Sprites/Wyvern/wyvern.png'
+w1 = path+'/Sprites/Wyvern/w_1.png'
+w2 = path+'/Sprites/Wyvern/w_2.png'
+
+venge = path+'/Sprites/Venge/venge.png'
+v1 = path+'/Sprites/Venge/v_1.png'
+v2 = path+'/Sprites/Venge/v_2.png'
+
+cm = path+'/Sprites/Cm/cm.png'
+c1 = path+'/Sprites/Cm/c_1.png'
+c2 = path+'/Sprites/Cm/c_2.png'
+
+lich = path+'/Sprites/Lich/lich.png'
+l1= path+'/Sprites/Lich/l_1.png'
+l2 = path+'/Sprites/Lich/l_2.png'
+
+
+images = [brood,b1,b2, lina,L1,L2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2]
+imagesOpened = []
+symbols = ["b","b","b", "L","L","L", "w","w","w", "v","v","v", "c","c","c", "l","l","l"]
+candy_style_count = 18;
+for i in range(candy_style_count):
+    imagesOpened.append(Image.open(images[i]))
+
 
 def_height = 1080;
 screen_width, screen_height = pyautogui.size()
@@ -24,6 +56,20 @@ candyH = round(90 * ratio)
 candyW = round(90 * ratio)
 startCY = startY + round(candyH/2)
 startCX = startX + round(candyH/2)
+print("Starting")
+start_time = datetime.now()
+def get_timestamp():
+   dt = datetime.now() - start_time
+   return dt
+def timestamp_to_ms(dt):
+   ms = (dt.days * 24 * 60 * 60 + dt.seconds) * 1000 + dt.microseconds / 1000.0
+   return ms
+def get_ms():
+    return timestamp_to_ms(get_timestamp())
+def trace_debug(msg):
+    if(debug):
+        print(f"#{get_timestamp()}#\t" + msg)
+input()
 def find_candy(candy,tok):
     #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
     try:
@@ -31,7 +77,17 @@ def find_candy(candy,tok):
             arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
             #x = input("Press Enter to continue...")
     except:
-        print("No candy found")
+        trace_debug("No candy found")
+        pass
+def find_candy2(candy,tok, screenshot):
+    #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
+    try:
+        start = get_ms()
+        for element in pyautogui.locateAll(candy,screenshot,confidence=0.69,grayscale=False):
+            arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
+            #x = input("Press Enter to continue...")
+    except:
+        trace_debug("No candy found")
         pass
     
 
@@ -40,134 +96,123 @@ def swap(i,j,k,l):
     pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
     pyautogui.mouseDown()
     pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
-    print(startCX+j*candyW,startCY+i*candyH)
-    print(startCX+l*candyW,startCY+k*candyH)
+    trace_debug(startCX+j*candyW,startCY+i*candyH)
+    trace_debug(startCX+l*candyW,startCY+k*candyH)
     pyautogui.mouseUp()
 
 def swap(i,j,k,l):
     #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
-    pyautogui.moveTo(270+j*90,180+i*90)
+    pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
     pyautogui.mouseDown()
-    pyautogui.moveTo(270+l*90,180+k*90,duration=0.2)
+    pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
     pyautogui.mouseUp()
-
 def solve(arr,tok):
+    is_solved = False
+    itera = 0
     for i in range(8):
         for j in range(8):
-            if arr[i][j] == tok:                                                                # 1
-                print(tok+" found at "+str(i)+","+str(j))
+            if is_solved:
+                break
+            itera += 1
+            if arr[i][j] == tok:
+                trace_debug(tok+" found at "+str(i)+","+str(j))
                 try:
-                    if arr[i+1][j] == tok:                                                      # 1
-                        print("second "+tok+" found at "+str(i+1)+","+str(j))                   # 2
+                    #VERTICAL
+                    ##SEQUENTIAL
+                    if i>1 and arr[i-1][j] == tok:
+                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j))
+                        if j<7 and arr[i-2][j+1] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
+                            swap(i-2,j+1,i-2,j)
+                            is_solved = True
+                            break
+                        if j>0 and arr[i-2][j-1] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
+                            swap(i-2,j-1,i-2,j)
+                            is_solved = True
+                            break
+                        if i>2 and arr[i-3][j] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-3)+","+str(j)+" DDR")
+                            swap(i-3,j,i-2,j)
+                            is_solved = True
+                            break
                         
-                        if arr[i+2][j+1] == tok:                                                # 1
-                            print("third "+tok+" found at "+str(i+2)+","+str(j+1)+" DDR")       # 2
-                            #arr[i+2][j+1]=arr[i+2][j]                                           # x3
-                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
-                            swap(i+2,j+1,i+2,j)
-                            break
-                        if j>0 and arr[i+2][j-1] == tok:                                        #  1                          
-                            print(" third "+tok+" found at "+str(i+2)+","+str(j-1)+" DDL")      #  2
-                            #arr[i+2][j-1]=arr[i+2][j]                                           # 3x                   
-                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"
-                            swap(i+2,j-1,i+2,j)
-                            break
-                        if arr[i+3][j] == tok:                                                  # 1           
-                            print("third "+tok+" found at "+str(i+3)+","+str(j)+" DDD")         # 2
-                            #arr[i+3][j]=arr[i+2][j]                                             # x                 
-                            #arr[i+2][j],arr[i+1][j],arr[i][j] = "a","a","a"                     # 3
-                            swap(i+3,j,i+2,j)   
-                            break
-                        if i>0 and arr[i-1][j+1] == tok:                                        # x3                            
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" UUR")       # 1
-                            #arr[i-1][j+1]=arr[i-1][j]                                           # 2                                
-                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
-                            swap(i-1,j+1,i-1,j)
-                            break
-                        if i>0 and j>0 and arr[i-1][j-1] == tok:                                # 3x
-                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" UUL")      #  1
-                            #arr[i-1][j-1]=arr[i-1][j]                                           #  2                
-                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"
+                    ##INBETWEEN
+                    if i>1 and arr[i-2][j] == tok:
+                        trace_debug("second "+tok+" found at "+str(i-2)+","+str(j))
+                        if j>0 and arr[i-1][j-1] == tok:
+                            trace_debug(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")
                             swap(i-1,j-1,i-1,j)
+                            is_solved = True
                             break
-                        if i>1 and arr[i-2][j] == tok:                                          # 3
-                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" UUU")         # x
-                            #arr[i-2][j]=arr[i-1][j]                                             # 1                  
-                            #arr[i-1][j],arr[i+1][j],arr[i][j] = "a","a","a"                     # 2
-                            swap(i-2,j,i-1,j)      
-                            break 
-                    if arr[i+2][j] == tok:                                                                             
-                        if j>0 and arr[i+1][j-1] == tok:                                        #  1              
-                            print(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")      # 3x
-                            #arr[i+1][j-1]=arr[i+1][j]                                           #  2
-                            #arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
-                            swap(i+1,j-1,i+1,j)
+                        if j<7 and arr[i-1][j+1] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")
+                            swap(i-1,j+1,i-1,j)   
+                            is_solved = True  
                             break
-                        if arr[i+1][j+1] == tok:                                                # 1                    
-                            print("third "+tok+" found at "+str(i-2)+","+str(j)+" DRD")         # x3
-                            #arr[i+1][j+1]=arr[i+1][j]                                           # 2        
-                            #arr[i+1][j],arr[i+2][j],arr[i][j] = "a","a","a"
-                            swap(i+1,j+1,i+1,j)     
-                            break 
-                except:
-                    pass
-            if arr[i][j] == tok:                                         
-                print(tok+" found at "+str(i)+","+str(j))         
-                try:
-                    if arr[i][j+1] == tok:
-                        print("second "+tok+" found at "+str(i)+","+str(j+1))
-                        print("i,j",i,j)
-                        if arr[i+1][j+2] == tok:                                                # 1 2 x
-                            print("third "+tok+" found at "+str(i+1)+","+str(j+2)+" RRD")       #     3
-                            #arr[i+1][j+2]=arr[i][j+2]                                           
-                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i+1,j+2,i,j+2)
+                    ##DIAGONAL
+                    if i>1 and j<7 and arr[i-1][j+1] == tok and arr[i-2][j+1] == tok:
+                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j+1))
+                        trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
+                        swap(i,j,i,j+1)
+                        is_solved = True
+                        break
+                    if i>1 and j>0 and arr[i-1][j-1] == tok and arr[i-2][j-1] == tok:
+                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j-1))
+                        trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
+                        swap(i,j,i,j-1)
+                        is_solved = True
+                        break
+                    #HORIZONTAL
+                    ##SEQUENTIAL
+                    if j>1 and arr[i][j-1] == tok:
+                        trace_debug("second "+tok+" found at "+str(i)+","+str(j - 1))
+                        if i>0 and arr[i-1][j-2] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
+                            swap(i-1,j-2,i,j-2)
+                            is_solved = True
                             break
-                        if i>0 and arr[i-1][j+2] == tok:                                        #     3
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+2)+" RRU")       # 1 2 x
-                            #arr[i-1][j+2]=arr[i][j+2]
-                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i-1,j+2,i,j+2) 
+                        if i<7 and arr[i+1][j-2] == tok:
+                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
+                            swap(i+1,j-2,i,j-2)
+                            is_solved = True
                             break
-                        if arr[i][j+3] == tok:                                                  # 1 2 x 3
-                            print("third "+tok+" found at "+str(i)+","+str(j+3)+" RRR")
-                            #arr[i][j+3]=arr[i][j+2]
-                            #arr[i][j+2],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i,j+3,i,j+2)
+                        if j>2 and arr[i][j-3] == tok:
+                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
+                            swap(i,j-3,i,j-2)
+                            is_solved = True
                             break
-                        if i>0 and j>1 and arr[i-1][j-1] == tok:                                # 3
-                            print("third "+tok+" found at "+str(i-1)+","+str(j-1)+" LLU")       # x 1 2
-                            #arr[i-1][j-1]=arr[i][j-1]
-                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
+                    ##INBETWEEN
+                    if j>1 and arr[i][j-2] == tok:
+                        trace_debug("second "+tok+" found at "+str(i)+","+str(j - 2))
+                        if i<7 and arr[i+1][j-1] == tok:
+                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-1)+" DDR")
+                            swap(i+1,j-1,i,j-1)
+                            is_solved = True
+                            break
+                        if i>0 and arr[i-1][j-1] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-1)+" DDR")
                             swap(i-1,j-1,i,j-1)
+                            is_solved = True
                             break
-                        if j>0 and arr[i+1][j-1] == tok:                                        # x 1 2
-                            print("third "+tok+" found at "+str(i+1)+","+str(j-1)+" LLD")       # 3
-                            #arr[i+1][j-1]=arr[i][j-1]
-                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i+1,j-1,i,j-1) 
-                            break
-                        if  arr[i][j-2] == tok:                                                 # 3 x 1 2                     
-                            print("third "+tok+" found at "+str(i)+","+str(j-2)+" LLL")         
-                            #arr[i][j-2]=arr[i][j-1]
-                            #arr[i][j-1],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i,j-2,i,j-1)
-                            break
-                    if arr[i][j+2] == tok:                                                      
-                        if arr[i+1][j+1] == tok:                                                # 1 x 2        
-                            print(" third "+tok+" found at "+str(i+1)+","+str(j+1)+" DLD")      #   3
-                            #arr[i+1][j+1]=arr[i+1][j]
-                            #arr[i+1][j],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i+1,j+1,i,j+1)
-                            break
-                        if i>0 and arr[i-1][j+1] == tok:                                        #   3                     
-                            print("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")       # 1 x 2
-                            #arr[i-1][j+1]=arr[i-1][j]
-                            #arr[i-1][j],arr[i][j+1],arr[i][j] = "a","a","a"
-                            swap(i-1,j+1,i,j+1)     
-                            break 
+                    ##DIAGONAL
+                    if j>1 and i<7 and arr[i+1][j-1] == tok and arr[i+1][j-2] == tok:
+                        trace_debug("second "+tok+" found at "+str(i+1)+","+str(j - 1))
+                        trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
+                        swap(i,j,i+1,j)
+                        is_solved = True
+                        break
+                    if j>1 and i>0 and arr[i-1][j-1] == tok and arr[i-1][j-2] == tok:
+                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j - 1))
+                        trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
+                        swap(i,j,i-1,j)
+                        is_solved = True
+                        break
+                    
                 except:
                     pass
+    trace_debug("took " +str(itera)+" iters")
+    return is_solved
 
 def grav(arr):
     for i in range(8):
@@ -186,21 +231,19 @@ def find():
     find_candy(cm,"c")
     find_candy(lich,"l")
 def solveb():
-    find_candy(brood,"b")
-    solve(arr,"b")
-    find_candy(lina,"L")
-    solve(arr,"L")
-    find_candy(wyvern,"w")
-    solve(arr,"w")
-    find_candy(cm,"c")
-    solve(arr,"c")
-    find_candy(lich,"l")
-    solve(arr,"l")
-    find_candy(venge,"v")
-    solve(arr,"v")
+    for i in range(8):
+        for j in range(8):
+            arr[i][j] = "N"#igger
+    for i in range(candy_style_count):
+        find_candy(images[i],symbols[i])
+        res = solve(arr, symbols[i])
+        if res:
+            break
 
 while True:  # making a loop
+    start = get_ms()
     solveb()
+    print(f"#SOLVEB DONE IN {get_ms() - start} ms")
     
     try:  # used try so that if user pressed other than the given key error will not be shown
         
