@@ -42,13 +42,13 @@ l2 = path+'/Sprites/Lich/l_2.png'
 def_height = 1080;
 screen_width, screen_height = pyautogui.size()
 ratio = screen_height/def_height;
-images = [brood,b1,b2, lina,L1,L2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2]
-piece_costs = [1,8,6, 1,5,5, 1,5,10, 1,8,10, 1,7,7, 1,7,7]
+images = [brood,b1,b2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2, lina,L1,L2]
+piece_costs = [1,8,6, 1,5,10, 1,8,10, 1,7,7, 1,7,7, 1,5,5]
 images_resized = []
 
 imagesOpened = []
 imagesOpened_resized = []
-symbols = ["b","b","b", "L","L","L", "w","w","w", "v","v","v", "c","c","c", "l","l","l"]
+symbols = ["b","b","b", "w","w","w", "v","v","v", "c","c","c", "l","l","l", "L","L","L"]
 candy_style_count = 18
 candy_type_count = 6
 for i in range(candy_style_count):
