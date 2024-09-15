@@ -12,6 +12,7 @@ resized_postfix = "_RESIZED"
 
 rows, cols = (8, 8)
 arr = [[0]*cols for _ in range(rows)]
+costs = [[0]*cols for _ in range(rows)]
 path = os.path.dirname(os.path.abspath(__file__))
 
 brood = path+'/Sprites/Brood/brood.png'
@@ -42,12 +43,14 @@ def_height = 1080;
 screen_width, screen_height = pyautogui.size()
 ratio = screen_height/def_height;
 images = [brood,b1,b2, lina,L1,L2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2]
+piece_costs = [1,8,6, 1,5,5, 1,5,10, 1,8,10, 1,7,7, 1,7,7]
 images_resized = []
 
 imagesOpened = []
 imagesOpened_resized = []
 symbols = ["b","b","b", "L","L","L", "w","w","w", "v","v","v", "c","c","c", "l","l","l"]
 candy_style_count = 18
+candy_type_count = 6
 for i in range(candy_style_count):
     imagesOpened.append(Image.open(images[i]))
 
@@ -86,11 +89,14 @@ def trace_debug(msg):
     if(debug):
         print(f"#{get_timestamp()}#\t" + msg)
 input()
-def find_candy(candy,tok):
+def find_candy(candy,tok,price):
     #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
     try:
         for element in pyautogui.locateAllOnScreen(candy,confidence=0.85,grayscale=False):
             arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
+            costs[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = price
+            if price>1:
+                trace_debug("found RARE " + tok)
             #x = input("Press Enter to continue...")
     except:
         trace_debug("No candy found")
@@ -130,109 +136,181 @@ def swap(i,j,k,l):
 def solve(arr,tok):
     is_solved = False
     itera = 0
+    x1 = -1
+    y1 = -1
+    x2 = -1
+    y2 = -1
+    total_price = 0
+    temp1 = 0
+    temp2 = 0
     for i in range(8):
         for j in range(8):
-            if is_solved:
-                break;
             itera += 1
             if arr[i][j] == tok:
                 trace_debug(tok+" found at "+str(i)+","+str(j))
+                temp1 = costs[i][j]
                 try:
                     #VERTICAL
                     ##SEQUENTIAL
                     if i>1 and arr[i-1][j] == tok:
+                        temp2 = temp1 + costs[i-1][j]
                         trace_debug("second "+tok+" found at "+str(i-1)+","+str(j))
                         if j<7 and arr[i-2][j+1] == tok:
                             trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
-                            swap(i-2,j+1,i-2,j)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-2][j+1] > total_price:
+                                total_price = temp2 + costs[i-2][j+1]
+                                x1 = i-2
+                                y1 = j+1
+                                x2 = i-2
+                                y2 = j
                         if j>0 and arr[i-2][j-1] == tok:
                             trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
-                            swap(i-2,j-1,i-2,j)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-2][j-1] > total_price:
+                                total_price = temp2 + costs[i-2][j-1]
+                                x1 = i-2
+                                y1 = j-1
+                                x2 = i-2
+                                y2 = j
                         if i>2 and arr[i-3][j] == tok:
                             trace_debug("third "+tok+" found at "+str(i-3)+","+str(j)+" DDR")
-                            swap(i-3,j,i-2,j)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-3][j] > total_price:
+                                total_price = temp2 + costs[i-3][j]
+                                x1 = i-3
+                                y1 = j
+                                x2 = i-2
+                                y2 = j
                         
                     ##INBETWEEN
                     if i>1 and arr[i-2][j] == tok:
+                        temp2 = temp1 + costs[i-2][j]
                         trace_debug("second "+tok+" found at "+str(i-2)+","+str(j))
                         if j>0 and arr[i-1][j-1] == tok:
                             trace_debug(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")
-                            swap(i-1,j-1,i-1,j)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-1][j-1] > total_price:
+                                total_price = temp2 + costs[i-1][j-1]
+                                x1 = i-1
+                                y1 = j-1
+                                x2 = i-1
+                                y2 = j
                         if j<7 and arr[i-1][j+1] == tok:
                             trace_debug("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")
-                            swap(i-1,j+1,i-1,j)   
-                            is_solved = True  
-                            break
+                            if temp2 + costs[i-1][j+1] > total_price:
+                                total_price = temp2 + costs[i-1][j+1]
+                                x1 = i-1
+                                y1 = j+1
+                                x2 = i-1
+                                y2 = j
+                        if i>2 and arr[i-3][j] == tok:
+                            trace_debug("third "+tok+" found at "+str(i-3)+","+str(j)+" DRD")
+                            if temp2 + costs[i-3][j] > total_price:
+                                total_price = temp2 + costs[i-3][j]
+                                x1 = i
+                                y1 = j
+                                x2 = i-1
+                                y2 = j
                     ##DIAGONAL
                     if i>1 and j<7 and arr[i-1][j+1] == tok and arr[i-2][j+1] == tok:
                         trace_debug("second "+tok+" found at "+str(i-1)+","+str(j+1))
                         trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
-                        swap(i,j,i,j+1)
-                        is_solved = True
-                        break
+                        if temp1 + costs[i-1][j+1] + costs[i-2][j+1] > total_price:
+                            total_price = temp1 + costs[i-1][j+1] + costs[i-2][j+1]
+                            x1 = i
+                            y1 = j
+                            x2 = i
+                            y2 = j+1
                     if i>1 and j>0 and arr[i-1][j-1] == tok and arr[i-2][j-1] == tok:
                         trace_debug("second "+tok+" found at "+str(i-1)+","+str(j-1))
                         trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
-                        swap(i,j,i,j-1)
-                        is_solved = True
-                        break
+                        if temp1 + costs[i-1][j-1] + costs[i-2][j-1] > total_price:
+                            total_price = temp1 + costs[i-1][j-1] + costs[i-2][j-1]
+                            x1 = i
+                            y1 = j
+                            x2 = i
+                            y2 = j-1
                     #HORIZONTAL
                     ##SEQUENTIAL
                     if j>1 and arr[i][j-1] == tok:
+                        temp2 = temp1 + costs[i][j-1]
                         trace_debug("second "+tok+" found at "+str(i)+","+str(j - 1))
                         if i>0 and arr[i-1][j-2] == tok:
                             trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
-                            swap(i-1,j-2,i,j-2)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-1][j-2] > total_price:
+                                total_price = temp2 + costs[i-1][j-2]
+                                x1 = i-1
+                                y1 = j-2
+                                x2 = i
+                                y2 = j-2
                         if i<7 and arr[i+1][j-2] == tok:
                             trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                            swap(i+1,j-2,i,j-2)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i+1][j-2] > total_price:
+                                total_price = temp2 + costs[i+1][j-2]
+                                x1 = i+1
+                                y1 = j-2
+                                x2 = i
+                                y2 = j-2
                         if j>2 and arr[i][j-3] == tok:
                             trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                            swap(i,j-3,i,j-2)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i][j-3] > total_price:
+                                total_price = temp2 + costs[i][j-3]
+                                x1 = i
+                                y1 = j-3
+                                x2 = i
+                                y2 = j-2
                     ##INBETWEEN
                     if j>1 and arr[i][j-2] == tok:
+                        temp2 = temp1 + costs[i][j-2]
                         trace_debug("second "+tok+" found at "+str(i)+","+str(j - 2))
                         if i<7 and arr[i+1][j-1] == tok:
                             trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-1)+" DDR")
-                            swap(i+1,j-1,i,j-1)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i+1][j-1] > total_price:
+                                total_price = temp2 + costs[i+1][j-1]
+                                x1 = i+1
+                                y1 = j-1
+                                x2 = i
+                                y2 = j-1
                         if i>0 and arr[i-1][j-1] == tok:
                             trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-1)+" DDR")
-                            swap(i-1,j-1,i,j-1)
-                            is_solved = True
-                            break
+                            if temp2 + costs[i-1][j-1] > total_price:
+                                total_price = temp2 + costs[i-1][j-1]
+                                x1 = i-1
+                                y1 = j-1
+                                x2 = i
+                                y2 = j-1
+                        if j>2 and arr[i][j-3] == tok:
+                            trace_debug("third "+tok+" found at "+str(i)+","+str(j-3)+" DRD")
+                            if temp2 + costs[i][j-3] > total_price:
+                                total_price = temp2 + costs[i][j-3]
+                                x1 = i
+                                y1 = j
+                                x2 = i
+                                y2 = j-1
                     ##DIAGONAL
                     if j>1 and i<7 and arr[i+1][j-1] == tok and arr[i+1][j-2] == tok:
                         trace_debug("second "+tok+" found at "+str(i+1)+","+str(j - 1))
                         trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                        swap(i,j,i+1,j)
-                        is_solved = True
-                        break
+                        if temp1 + costs[i+1][j-1] + costs[i+1][j-2] > total_price:
+                            total_price = temp1 + costs[i+1][j-1] + costs[i+1][j-2]
+                            x1 = i
+                            y1 = j
+                            x2 = i+1
+                            y2 = j
                     if j>1 and i>0 and arr[i-1][j-1] == tok and arr[i-1][j-2] == tok:
                         trace_debug("second "+tok+" found at "+str(i-1)+","+str(j - 1))
                         trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
-                        swap(i,j,i-1,j)
-                        is_solved = True
-                        break
+                        if temp1 + costs[i-1][j-1] + costs[i-1][j-2] > total_price:
+                            total_price = temp1 + costs[i-1][j-1] + costs[i-1][j-2]
+                            x1 = i
+                            y1 = j
+                            x2 = i-1
+                            y2 = j
                     
                 except:
                     pass
     trace_debug("took " +str(itera)+" iters")
+    if total_price > 0:
+        is_solved = True
+        trace_debug(f"Swapping ({x1}:{y1}) with ({x2}:{y2}) for the total price of {total_price})")
+        swap(x1,y1,x2,y2)
     return is_solved
 
 def grav(arr):
@@ -245,19 +323,26 @@ def grav(arr):
     return arr
 
 def find():
-    find_candy(brood,"b")
-    find_candy(lina,"L")
-    find_candy(wyvern,"w")
-    find_candy(venge,"v")
-    find_candy(cm,"c")
-    find_candy(lich,"l")
+    find_candy(brood,"b",1)
+    find_candy(lina,"L",1)
+    find_candy(wyvern,"w",1)
+    find_candy(venge,"v",1)
+    find_candy(cm,"c",1)
+    find_candy(lich,"l",1)
 def solveb():
     for i in range(8):
         for j in range(8):
             arr[i][j] = "N"#igger
-    for i in range(candy_style_count):
-        find_candy(images_resized[i],symbols[i])
-        res = solve(arr, symbols[i])
+            costs[i][j] = 0
+    second_iter = 0
+    for i in range(candy_type_count):
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        second_iter+=1
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        second_iter+=1
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        res = solve(arr, symbols[second_iter])
+        second_iter+=1
         if res:
             break;
 
@@ -275,4 +360,8 @@ while True:  # making a loop
         break  # if user pressed a key other than the given key the loop will breakq
 
 for row in arr:
+    print(row)
+print("\n")
+print("\nCosts:\n")
+for row in costs:
     print(row)
