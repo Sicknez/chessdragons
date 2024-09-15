@@ -4,6 +4,7 @@ import keyboard
 from datetime import datetime
 from datetime import timedelta
 from PIL import Image
+import threading
 import os
 
 debug = False
@@ -105,22 +106,27 @@ def find_candy2(candy,tok, screenshot):
         trace_debug("No candy found")
         pass
     
-
+moving = False
+def swap_logic(i,j,k,l):
+    global moving
+    if not moving:
+        moving = True
+        pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
+        pyautogui.mouseDown()
+        pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
+        pyautogui.mouseUp()
+        moving = False
+        
 def swap(i,j,k,l):
+    swap_threaded = threading.Thread(target=swap_logic, args=(i,j,k,l))
+    swap_threaded.start()
     #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
-    pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
-    pyautogui.mouseDown()
-    pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
     trace_debug(startCX+j*candyW,startCY+i*candyH)
     trace_debug(startCX+l*candyW,startCY+k*candyH)
-    pyautogui.mouseUp()
-
+    
 def swap(i,j,k,l):
-    #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
-    pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
-    pyautogui.mouseDown()
-    pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
-    pyautogui.mouseUp()
+    swap_threaded = threading.Thread(target=swap_logic, args=(i,j,k,l))
+    swap_threaded.start()
 def solve(arr,tok):
     is_solved = False
     itera = 0
