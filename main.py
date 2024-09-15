@@ -6,7 +6,8 @@ from datetime import timedelta
 from PIL import Image
 import os
 
-debug = True
+debug = False
+resized_postfix = "_RESIZED"
 
 rows, cols = (8, 8)
 arr = [[0]*cols for _ in range(rows)]
@@ -36,17 +37,34 @@ lich = path+'/Sprites/Lich/lich.png'
 l1= path+'/Sprites/Lich/l_1.png'
 l2 = path+'/Sprites/Lich/l_2.png'
 
+def_height = 1080;
+screen_width, screen_height = pyautogui.size()
+ratio = screen_height/def_height;
 images = [brood,b1,b2, lina,L1,L2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2]
+images_resized = []
+
 imagesOpened = []
+imagesOpened_resized = []
 symbols = ["b","b","b", "L","L","L", "w","w","w", "v","v","v", "c","c","c", "l","l","l"]
 candy_style_count = 18
 for i in range(candy_style_count):
     imagesOpened.append(Image.open(images[i]))
 
+for i in range(candy_style_count):
+    file = os.path.splitext(images[i])
+    resized_name = file[0] + resized_postfix + file[1]
+    width, height = imagesOpened[i].size
+    width = round(width * ratio)
+    height = round(height * ratio)
+    new_size = (width, height)
+    images_resized.append(resized_name)
+    resized_image = imagesOpened[i].resize(new_size,Image.Resampling.LANCZOS)
+    resized_image.save(resized_name)
+     
+for i in range(candy_style_count):
+    imagesOpened_resized.append(Image.open(images_resized[i]))
+   
 
-def_height = 1080;
-screen_width, screen_height = pyautogui.size()
-ratio = screen_height/def_height;
 startY = round(130 * ratio)
 startX = round(230 * ratio)
 candyH = round(90 * ratio)
@@ -232,7 +250,7 @@ def solveb():
         for j in range(8):
             arr[i][j] = "N"#igger
     for i in range(candy_style_count):
-        find_candy(images[i],symbols[i])
+        find_candy(images_resized[i],symbols[i])
         res = solve(arr, symbols[i])
         if res:
             break;
