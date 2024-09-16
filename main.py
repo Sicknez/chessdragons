@@ -75,6 +75,11 @@ candyH = round(90 * ratio)
 candyW = round(90 * ratio)
 startCY = startY + round(candyH/2)
 startCX = startX + round(candyH/2)
+
+boardH = round(720 * ratio)
+boardW = round(710 * ratio)
+
+region_board = (startX, startY, startX+boardW, startY+boardH)
 print("Starting")
 start_time = datetime.now()
 def get_timestamp():
@@ -92,7 +97,7 @@ input()
 def find_candy(candy,tok,price):
     #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
     try:
-        for element in pyautogui.locateAllOnScreen(candy,confidence=0.85,grayscale=False):
+        for element in pyautogui.locateAllOnScreen(candy,confidence=0.83,grayscale=False, region=region_board):
             arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
             costs[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = price
             if price>1:
@@ -119,7 +124,7 @@ def swap_logic(i,j,k,l):
         moving = True
         pyautogui.moveTo(startCX+j*candyW,startCY+i*candyH)
         pyautogui.mouseDown()
-        pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.2)
+        pyautogui.moveTo(startCX+l*candyW,startCY+k*candyH,duration=0.151)
         pyautogui.mouseUp()
         moving = False
         
@@ -307,7 +312,8 @@ def solve(arr,tok):
                 except:
                     pass
     trace_debug("took " +str(itera)+" iters")
-    if total_price > 0:
+    global moving
+    if total_price > 0 and not moving:
         is_solved = True
         trace_debug(f"Swapping ({x1}:{y1}) with ({x2}:{y2}) for the total price of {total_price})")
         swap(x1,y1,x2,y2)
@@ -329,6 +335,14 @@ def find():
     find_candy(venge,"v",1)
     find_candy(cm,"c",1)
     find_candy(lich,"l",1)
+def solveb_for_one(second_iter):
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        second_iter+=1
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        second_iter+=1
+        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
+        res = solve(arr, symbols[second_iter])
+        return res
 def solveb():
     for i in range(8):
         for j in range(8):
@@ -336,13 +350,8 @@ def solveb():
             costs[i][j] = 0
     second_iter = 0
     for i in range(candy_type_count):
-        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
-        second_iter+=1
-        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
-        second_iter+=1
-        find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
-        res = solve(arr, symbols[second_iter])
-        second_iter+=1
+        second_iter = i*3
+        res = solveb_for_one(second_iter)
         if res:
             break;
 
