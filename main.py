@@ -6,15 +6,17 @@ from datetime import timedelta
 from PIL import Image
 import threading
 import os
+import copy
 
 debug = False
 resized_postfix = "_RESIZED"
 
 rows, cols = (8, 8)
-arr = [[0]*cols for _ in range(rows)]
+arr = [["N"]*cols for _ in range(rows)]
 costs = [[0]*cols for _ in range(rows)]
 path = os.path.dirname(os.path.abspath(__file__))
 
+#image paths
 brood = path+'/Sprites/Brood/brood.png'
 b1 = path+'/Sprites/Brood/b_1.png'
 b2 = path+'/Sprites/Brood/b_2.png'
@@ -39,12 +41,20 @@ lich = path+'/Sprites/Lich/lich.png'
 l1= path+'/Sprites/Lich/l_1.png'
 l2 = path+'/Sprites/Lich/l_2.png'
 
-def_height = 1080;
+def_height = 1080
 screen_width, screen_height = pyautogui.size()
-ratio = screen_height/def_height;
+ratio = screen_height/def_height
 images = [brood,b1,b2, wyvern,w1,w2, venge,v1,v2, cm,c1,c2, lich,l1,l2, lina,L1,L2]
-piece_costs = [1,8,6, 1,5,10, 1,8,10, 1,7,7, 1,7,7, 1,5,5]
+piece_costs = [2,8,6, 3,5,10, 1,5,12, 3,7,7, 3,7,7, 3,5,5]
+
 images_resized = []
+
+#patch cropping
+Right = 30
+Left = 20
+Top = 20
+Bottom = 20
+
 
 imagesOpened = []
 imagesOpened_resized = []
@@ -67,15 +77,14 @@ for i in range(candy_style_count):
      
 for i in range(candy_style_count):
     imagesOpened_resized.append(Image.open(images_resized[i]))
-   
 
+#board constants
 startY = round(130 * ratio)
 startX = round(230 * ratio)
 candyH = round(90 * ratio)
 candyW = round(90 * ratio)
 startCY = startY + round(candyH/2)
 startCX = startX + round(candyH/2)
-
 boardH = round(720 * ratio)
 boardW = round(710 * ratio)
 
@@ -94,29 +103,69 @@ def trace_debug(msg):
     if(debug):
         print(f"#{get_timestamp()}#\t" + msg)
 input()
-def find_candy(candy,tok,price):
-    #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
-    try:
-        for element in pyautogui.locateAllOnScreen(candy,confidence=0.83,grayscale=False, region=region_board):
-            arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
-            costs[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = price
-            if price>1:
-                trace_debug("found RARE " + tok)
-            #x = input("Press Enter to continue...")
-    except:
-        trace_debug("No candy found")
-        pass
-def find_candy2(candy,tok, screenshot):
-    #screenshot = pyautogui.screenshot(region=(220,110, 730, 750))
-    try:
-        start = get_ms()
-        for element in pyautogui.locateAll(candy,screenshot,confidence=0.69,grayscale=False):
-            arr[(element[1]-startY)//candyH][(element[0]-startX)//candyW] = tok
-            #x = input("Press Enter to continue...")
-    except:
-        trace_debug("No candy found")
-        pass
+
+#Function to check if there are any matches adds a dot to the end of the match
+def check_matches(board):
+    max_result = 0
+    for i in range(rows):
+        for j in range(cols):
+            if board[i][j] != "N":                
+                if j+2< cols and board[i][j] == board[i][j+1] == board[i][j+2]:
+                    token = board[i][j]
+                    len = matchH(i, j,board)
+
+                    trace_debug(f"Horizontal match found at:{i},{j} | Token:{token} | Length:{len}")
+                    
+                
+                if i+2< rows and board[i][j] == board[i+1][j] == board[i+2][j]:
+                    token = board[i][j]
+                    len = matchV(i, j,board)
+                    trace_debug(f"Vertical match found at:{i},{j} | Token:{token} | Length:{len}")
+                
+                if board[i][j].count('.') > max_result:
+                    max_result = board[i][j].count('.')
+    return max_result
+
+def matchH(i, j,board):
+    tok = board[i][j][0]
+    length = 0
+    while j<cols and board[i][j][0]==tok:
+        board[i][j] += '.'
+        j+=1
+        length+=1
+    return length
+
+def matchV(i, j,board):
+    tok = board[i][j][0]
+    length = 0
+    while i<rows and board[i][j][0]==tok:
+        board[i][j] += '.'
+        i+=1
+        length+=1
+    return length
+#prints the board
+def print_board(board):
+    for i in range(rows):
+        for j in range(cols):
+            print(board[i][j], end = " ")
+        print()
+#Function to find the candies on the board
+def find_candy(candy, tok,price):
+    screenshot = pyautogui.screenshot(region=(startX, startY, boardW, boardH))
     
+    for i in range(rows):
+        for j in range(cols):
+            patch = screenshot.crop((j*candyW+Top, i*candyH+Left, (j+1)*candyW-Right, (i+1)*candyH-Bottom))
+            try:
+                if pyautogui.locate(candy, patch, grayscale=False, confidence=0.7) != None:
+                    arr[i][j] = tok
+                    costs[i][j] = price
+                    if price>1:
+                        trace_debug("found RARE " + tok)
+            except:
+                trace_debug("No candy found")
+                pass
+
 moving = False
 def swap_logic(i,j,k,l):
     global moving
@@ -131,229 +180,65 @@ def swap_logic(i,j,k,l):
 def swap(i,j,k,l):
     swap_threaded = threading.Thread(target=swap_logic, args=(i,j,k,l))
     swap_threaded.start()
-    #arr[i][j],arr[k][l] = arr[k][l],arr[i][j]
     trace_debug(startCX+j*candyW,startCY+i*candyH)
     trace_debug(startCX+l*candyW,startCY+k*candyH)
-    
-def swap(i,j,k,l):
-    swap_threaded = threading.Thread(target=swap_logic, args=(i,j,k,l))
-    swap_threaded.start()
-def solve(arr,tok):
+
+def solve(arr):
+    max_result = 0
     is_solved = False
-    itera = 0
     x1 = -1
     y1 = -1
     x2 = -1
     y2 = -1
-    total_price = 0
-    temp1 = 0
-    temp2 = 0
     for i in range(8):
         for j in range(8):
-            itera += 1
-            if arr[i][j] == tok:
-                trace_debug(tok+" found at "+str(i)+","+str(j))
-                temp1 = costs[i][j]
-                try:
-                    #VERTICAL
-                    ##SEQUENTIAL
-                    if i>1 and arr[i-1][j] == tok:
-                        temp2 = temp1 + costs[i-1][j]
-                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j))
-                        if j<7 and arr[i-2][j+1] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
-                            if temp2 + costs[i-2][j+1] > total_price:
-                                total_price = temp2 + costs[i-2][j+1]
-                                x1 = i-2
-                                y1 = j+1
-                                x2 = i-2
-                                y2 = j
-                        if j>0 and arr[i-2][j-1] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
-                            if temp2 + costs[i-2][j-1] > total_price:
-                                total_price = temp2 + costs[i-2][j-1]
-                                x1 = i-2
-                                y1 = j-1
-                                x2 = i-2
-                                y2 = j
-                        if i>2 and arr[i-3][j] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-3)+","+str(j)+" DDR")
-                            if temp2 + costs[i-3][j] > total_price:
-                                total_price = temp2 + costs[i-3][j]
-                                x1 = i-3
-                                y1 = j
-                                x2 = i-2
-                                y2 = j
-                        
-                    ##INBETWEEN
-                    if i>1 and arr[i-2][j] == tok:
-                        temp2 = temp1 + costs[i-2][j]
-                        trace_debug("second "+tok+" found at "+str(i-2)+","+str(j))
-                        if j>0 and arr[i-1][j-1] == tok:
-                            trace_debug(" third "+tok+" found at "+str(i-1)+","+str(j-1)+" DLD")
-                            if temp2 + costs[i-1][j-1] > total_price:
-                                total_price = temp2 + costs[i-1][j-1]
-                                x1 = i-1
-                                y1 = j-1
-                                x2 = i-1
-                                y2 = j
-                        if j<7 and arr[i-1][j+1] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j+1)+" DRD")
-                            if temp2 + costs[i-1][j+1] > total_price:
-                                total_price = temp2 + costs[i-1][j+1]
-                                x1 = i-1
-                                y1 = j+1
-                                x2 = i-1
-                                y2 = j
-                        if i>2 and arr[i-3][j] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-3)+","+str(j)+" DRD")
-                            if temp2 + costs[i-3][j] > total_price:
-                                total_price = temp2 + costs[i-3][j]
-                                x1 = i
-                                y1 = j
-                                x2 = i-1
-                                y2 = j
-                    ##DIAGONAL
-                    if i>1 and j<7 and arr[i-1][j+1] == tok and arr[i-2][j+1] == tok:
-                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j+1))
-                        trace_debug("third "+tok+" found at "+str(i-2)+","+str(j+1)+" DDR")
-                        if temp1 + costs[i-1][j+1] + costs[i-2][j+1] > total_price:
-                            total_price = temp1 + costs[i-1][j+1] + costs[i-2][j+1]
-                            x1 = i
-                            y1 = j
-                            x2 = i
-                            y2 = j+1
-                    if i>1 and j>0 and arr[i-1][j-1] == tok and arr[i-2][j-1] == tok:
-                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j-1))
-                        trace_debug("third "+tok+" found at "+str(i-2)+","+str(j-1)+" DDR")
-                        if temp1 + costs[i-1][j-1] + costs[i-2][j-1] > total_price:
-                            total_price = temp1 + costs[i-1][j-1] + costs[i-2][j-1]
-                            x1 = i
-                            y1 = j
-                            x2 = i
-                            y2 = j-1
-                    #HORIZONTAL
-                    ##SEQUENTIAL
-                    if j>1 and arr[i][j-1] == tok:
-                        temp2 = temp1 + costs[i][j-1]
-                        trace_debug("second "+tok+" found at "+str(i)+","+str(j - 1))
-                        if i>0 and arr[i-1][j-2] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
-                            if temp2 + costs[i-1][j-2] > total_price:
-                                total_price = temp2 + costs[i-1][j-2]
-                                x1 = i-1
-                                y1 = j-2
-                                x2 = i
-                                y2 = j-2
-                        if i<7 and arr[i+1][j-2] == tok:
-                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                            if temp2 + costs[i+1][j-2] > total_price:
-                                total_price = temp2 + costs[i+1][j-2]
-                                x1 = i+1
-                                y1 = j-2
-                                x2 = i
-                                y2 = j-2
-                        if j>2 and arr[i][j-3] == tok:
-                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                            if temp2 + costs[i][j-3] > total_price:
-                                total_price = temp2 + costs[i][j-3]
-                                x1 = i
-                                y1 = j-3
-                                x2 = i
-                                y2 = j-2
-                    ##INBETWEEN
-                    if j>1 and arr[i][j-2] == tok:
-                        temp2 = temp1 + costs[i][j-2]
-                        trace_debug("second "+tok+" found at "+str(i)+","+str(j - 2))
-                        if i<7 and arr[i+1][j-1] == tok:
-                            trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-1)+" DDR")
-                            if temp2 + costs[i+1][j-1] > total_price:
-                                total_price = temp2 + costs[i+1][j-1]
-                                x1 = i+1
-                                y1 = j-1
-                                x2 = i
-                                y2 = j-1
-                        if i>0 and arr[i-1][j-1] == tok:
-                            trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-1)+" DDR")
-                            if temp2 + costs[i-1][j-1] > total_price:
-                                total_price = temp2 + costs[i-1][j-1]
-                                x1 = i-1
-                                y1 = j-1
-                                x2 = i
-                                y2 = j-1
-                        if j>2 and arr[i][j-3] == tok:
-                            trace_debug("third "+tok+" found at "+str(i)+","+str(j-3)+" DRD")
-                            if temp2 + costs[i][j-3] > total_price:
-                                total_price = temp2 + costs[i][j-3]
-                                x1 = i
-                                y1 = j
-                                x2 = i
-                                y2 = j-1
-                    ##DIAGONAL
-                    if j>1 and i<7 and arr[i+1][j-1] == tok and arr[i+1][j-2] == tok:
-                        trace_debug("second "+tok+" found at "+str(i+1)+","+str(j - 1))
-                        trace_debug("third "+tok+" found at "+str(i+1)+","+str(j-2)+" DDR")
-                        if temp1 + costs[i+1][j-1] + costs[i+1][j-2] > total_price:
-                            total_price = temp1 + costs[i+1][j-1] + costs[i+1][j-2]
-                            x1 = i
-                            y1 = j
-                            x2 = i+1
-                            y2 = j
-                    if j>1 and i>0 and arr[i-1][j-1] == tok and arr[i-1][j-2] == tok:
-                        trace_debug("second "+tok+" found at "+str(i-1)+","+str(j - 1))
-                        trace_debug("third "+tok+" found at "+str(i-1)+","+str(j-2)+" DDR")
-                        if temp1 + costs[i-1][j-1] + costs[i-1][j-2] > total_price:
-                            total_price = temp1 + costs[i-1][j-1] + costs[i-1][j-2]
-                            x1 = i
-                            y1 = j
-                            x2 = i-1
-                            y2 = j
-                    
-                except:
-                    pass
-    trace_debug("took " +str(itera)+" iters")
-    global moving
-    if total_price > 0 and not moving:
+            temp = arr[i][j]
+            if j+1 < 8:
+                board1 = copy.deepcopy(arr)
+                board1[i][j] = board1[i][j+1]
+                board1[i][j+1] = temp
+                if max_result <check_matches(board1):
+                    max_result = check_matches(board1)
+                    x1 = i
+                    y1 = j
+                    x2 = i
+                    y2 = j+1
+            if i+1 < 8:
+                board2 = copy.deepcopy(arr)
+                board2[i][j] = board2[i+1][j]
+                board2[i+1][j] = temp
+                
+                if max_result <check_matches(board2):
+                    max_result = check_matches(board2)
+                    x1 = i
+                    y1 = j
+                    x2 = i+1
+                    y2 = j
+    if max_result > 0:
         is_solved = True
-        trace_debug(f"Swapping ({x1}:{y1}) with ({x2}:{y2}) for the total price of {total_price})")
         swap(x1,y1,x2,y2)
     return is_solved
 
-def grav(arr):
-    for i in range(8):
-        for j in range(8):
-            if arr[i][j] == "a":
-                for k in range(i,0,-1):
-                    arr[k][j] = arr[k-1][j]
-                arr[0][j] = "a"
-    return arr
-
-def find():
-    find_candy(brood,"b",1)
-    find_candy(lina,"L",1)
-    find_candy(wyvern,"w",1)
-    find_candy(venge,"v",1)
-    find_candy(cm,"c",1)
-    find_candy(lich,"l",1)
 def solveb_for_one(second_iter):
         find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
         second_iter+=1
         find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
         second_iter+=1
         find_candy(images_resized[second_iter],symbols[second_iter],piece_costs[second_iter])
-        res = solve(arr, symbols[second_iter])
+        res = solve(arr)
         return res
+
 def solveb():
     for i in range(8):
         for j in range(8):
-            arr[i][j] = "N"#igger
+            arr[i][j] = "N"
             costs[i][j] = 0
     second_iter = 0
     for i in range(candy_type_count):
         second_iter = i*3
         res = solveb_for_one(second_iter)
         if res:
-            break;
+            break
 
 while True:  # making a loop
     start = get_ms()
@@ -368,9 +253,10 @@ while True:  # making a loop
     except:
         break  # if user pressed a key other than the given key the loop will breakq
 
-for row in arr:
-    print(row)
+print_board(arr)
 print("\n")
 print("\nCosts:\n")
-for row in costs:
-    print(row)
+print_board(costs)
+
+
+
